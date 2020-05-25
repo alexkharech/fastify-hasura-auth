@@ -1,22 +1,20 @@
-## fastify-hasura-auth
+# fastify-hasura-auth
 
 This project is the starting point for authorization in Hasura GraphQL, and he is also ready to add the necessary routes to your API
 
-> generate keys
-
 ```sh
+# generate keys
 openssl genrsa -out private.pem 2048
 openssl rsa -in private.pem -pubout > public.pem
 ```
 
-> show keys
-
 ```sh
+# show keys
 awk -v ORS='\\n' '1' private.pem
 awk -v ORS='\\n' '1' public.pem
 ```
 
-> copy `.env.example` and edit to `.env`
+copy `.env.example` to `.env`
 
 ```json
 AUTH_PRIVATE_KEY=="-----BEGIN RSA PRIVATE KEY-----\nypPTIfSzZ399o........"
@@ -24,9 +22,9 @@ AUTH_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nV02/4RJi........"
 HASURA_GRAPHQL_JWT_SECRET={ "claims_namespace": "https://hasura.io/jwt/claims", "type": "RS256", "key": "<AUTH_PUBLIC_KEY>" }
 ```
 
-### dev & hotreload
+## develop
 
-> hasura engine
+### hasura engine
 
 ```sh
 hasura init
@@ -34,14 +32,14 @@ docker-compose -f docker-compose.dev.yaml up -d
 hasura console --admin-secret "adminsecret"
 ```
 
-> api
+### api
 
 ```sh
 yarn
 yarn dev
 ```
 
-> schema
+### schema
 
 ```sql
 CREATE TABLE public.users (
@@ -50,14 +48,21 @@ CREATE TABLE public.users (
     active boolean DEFAULT true NOT NULL,
     password text NOT NULL,
 );
+
+CREATE TABLE public.roles (
+    name text NOT NULL,
+    description text
+);
+
 CREATE TABLE public.users_roles (
     user_id uuid NOT NULL,
     role_name text NOT NULL
 );
 ```
 
-> add authorization actions using Hasura console
-> ![add actions](hasura-add-actions.png)
+### add authorization actions using Hasura console
+
+![add actions](hasura-add-actions.png)
 
 ```gql
 type authOutput {
@@ -84,10 +89,12 @@ type Query {
 }
 ```
 
-> set permisions
-> ![set permisions](hasura-set-permisions.png)
+### set permisions
 
-> test your api in console
-> ![graphql console](hasura-example.png)
+![set permisions](hasura-set-permisions.png)
 
-Enjoy!
+### test your api in console
+
+![graphql console](hasura-example.png)
+
+## Enjoy!
