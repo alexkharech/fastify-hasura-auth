@@ -138,7 +138,7 @@ export default fp((fastify, opts: Options, next) => {
             password: password,
             roles: [{ "#dbRef": "user" }],
           })
-          .eager("roles");
+          .withGraphFetched("roles");
 
         request.user = await createUserToken(user);
         done(null);
