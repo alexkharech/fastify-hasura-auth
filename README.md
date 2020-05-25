@@ -62,7 +62,7 @@ CREATE TABLE public.users_roles (
 
 ### add authorization actions using Hasura console
 
-![add actions](hasura-add-actions.png)
+![add actions](docs/hasura-add-actions.png)
 
 ```gql
 type authOutput {
@@ -91,10 +91,10 @@ type Query {
 
 ### set permisions
 
-![set permisions](hasura-set-permisions.png)
+![set permisions](docs/hasura-set-permisions.png)
 
 ### test your api in console
 
-![graphql console](hasura-example.png)
+![graphql console](docs/hasura-example.png)
 
 ## Enjoy!
