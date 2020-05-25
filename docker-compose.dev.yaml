@@ -2,11 +2,8 @@ version: "3.6"
 services:
   graphql-engine:
     image: hasura/graphql-engine:v1.2.1
-    restart: always
-    env_file: .env
-
-  api:
-    build: .
+    ports:
+      - "8080:8080"
     restart: always
     env_file: .env
 
@@ -16,3 +13,13 @@ services:
     volumes:
       - ./docker/redis.conf:/usr/local/etc/redis/redis.conf:ro
       - ./data:/data:rw
+    ports:
+      - "6379:6379"
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    restart: always
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "9000:8081"
