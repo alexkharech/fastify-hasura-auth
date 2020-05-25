@@ -1,0 +1,11 @@
+version: "3.6"
+services:
+  graphql-engine:
+    image: hasura/graphql-engine:v1.2.1
+    restart: always
+    env_file: .env
+
+  fastify-hasura-auth:
+    build: .
+    restart: always
+    env_file: .env
