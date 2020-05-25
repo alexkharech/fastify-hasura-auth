@@ -68,14 +68,15 @@ export default fp((fastify, opts: Options, next) => {
     };
     userToken.token = getJwt(userToken);
 
-    const redisKey = `tokens:${userToken.token}`;
-    const errors = await fastify.redis
-      .multi()
-      .set(redisKey, userToken.id)
-      .expire(redisKey, opts.tokenExpire) // expire token in 30 days
-      .exec();
+    const redisKey = `tokens:${user.id}:${userToken.token}`;
+    const error = await fastify.redis.set(
+      redisKey,
+      userToken.id,
+      "EX",
+      opts.tokenExpire
+    );
+    if (error) fastify.log.error(error);
 
-    errors.filter((err) => err[0]).forEach((err) => fastify.log.error(err));
     return userToken;
   };
 
@@ -161,18 +162,20 @@ export default fp((fastify, opts: Options, next) => {
       const token = (authorization as string).split(" ")[1];
       if (!token) return done(new Error(errorTexts.AUTH_INVALID_TOKEN));
 
-      // token expired or not found
-      if (!(await fastify.redis.get(`tokens:${token}`)))
-        return done(new Error(errorTexts.AUTH_INVALID_TOKEN));
-
       const userToken = fastify.jwt.decode(token) as UserToken;
-
-      // update token expire
       if (userToken) {
+        // token expired or not found
+        if (!(await fastify.redis.get(`tokens:${userToken.id}:${token}`)))
+          return done(new Error(errorTexts.AUTH_INVALID_TOKEN));
+
+        // update token
         const user = await User.query()
           .findOne("id", userToken.id)
           .eager("roles");
+
         request.user = await createUserToken(user);
+      } else {
+        return done(new Error(errorTexts.AUTH_INVALID_TOKEN));
       }
 
       done(null);
