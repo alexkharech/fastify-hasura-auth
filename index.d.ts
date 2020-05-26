@@ -2,6 +2,7 @@ import * as http from "http";
 import * as mailer from "nodemailer";
 import Knex from "knex";
 import { AuthFunction } from "fastify-auth";
+import { FastifyConfig } from "plugins/config";
 
 declare module "fastify" {
   export interface FastifyInstance<
@@ -13,7 +14,8 @@ declare module "fastify" {
 
     registerUser: AuthFunction;
     verifyJwtToken: AuthFunction;
-    verifyLoginAndPassword: AuthFunction;
-    nodemailer: mailer.Transport;
+    verifyUsernameAndPassword: AuthFunction;
+    nodemailer: mailer.Transporter;
+    config: FastifyConfig;
   }
 }

@@ -4,4 +4,6 @@ export default {
   EMAIL_IS_ALREADY_IN_USE: "Email is already in use",
   INVALID_TOKEN: "Token is invalid",
   USER_IS_NOT_ACTIVE: "User is not active",
+
+  SERVER_ERROR: "Internal servers error",
 };

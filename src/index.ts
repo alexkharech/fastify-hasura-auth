@@ -8,7 +8,7 @@ import { bootstrap } from "fastify-decorators";
 import { RedisOptions } from "ioredis";
 
 import "./utils";
-import { openapi, auth, objection, nodemailer } from "./plugins";
+import { openapi, auth, objection, nodemailer, config } from "./plugins";
 import { resolve } from "path";
 
 import { checkForExists } from "./utils";
@@ -51,7 +51,7 @@ instance
     pool: true,
     host: process.env.MAIl_HOST,
     port: process.env.MAIL_PORT,
-    secure: process.env.MAIL_USE_TLS,
+    secure: process.env.MAIL_SECURE,
     auth: {
       user: process.env.MAIL_USERNAME,
       pass: process.env.MAIL_PASSWORD,
@@ -60,12 +60,16 @@ instance
   .register(objection, {
     url: process.env.DATABASE_URL,
   })
+  .register(config, {
+    fromDb: true,
+  })
   .register(redis, <RedisOptions>{ url: process.env.REDIS_URL })
   .register(auth, {
     privateKey: process.env.AUTH_PRIVATE_KEY || "",
     publicKey: process.env.AUTH_PUBLIC_KEY || "",
     claimsNamespace: process.env.CLAIMS_NAMESPACE || "",
     tokenExpire: 30 * 86400, // 30 days
+    usernameField: "email",
   })
   .register(bootstrap, {
     directory: resolve(__dirname, `controllers`),

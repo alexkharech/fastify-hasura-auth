@@ -42,22 +42,39 @@ yarn dev
 ### schema
 
 ```sql
-CREATE TABLE public.users (
-    id uuid DEFAULT public.gen_random_uuid() NOT NULL,
-    email text NOT NULL,
-    active boolean DEFAULT true NOT NULL,
-    password text NOT NULL,
-);
+CREATE TABLE "public"."roles" (
+    "name" text NOT NULL,
+    "description" text,
+    CONSTRAINT "role_name_key" UNIQUE ("name"),
+    CONSTRAINT "role_pkey" PRIMARY KEY ("name")
+) WITH (oids = false);
 
-CREATE TABLE public.roles (
-    name text NOT NULL,
-    description text
-);
+CREATE TABLE "public"."users" (
+    "id" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "email" text NOT NULL,
+    "active" boolean DEFAULT true NOT NULL,
+    "password" text NOT NULL,
+    CONSTRAINT "user_email_key" UNIQUE ("email"),
+    CONSTRAINT "user_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "users_phone_key" UNIQUE ("phone")
+) WITH (oids = false);
 
-CREATE TABLE public.users_roles (
-    user_id uuid NOT NULL,
-    role_name text NOT NULL
-);
+CREATE TABLE "public"."users_roles" (
+    "user_id" uuid NOT NULL,
+    "role_name" text NOT NULL,
+    CONSTRAINT "user_role_pkey" PRIMARY KEY ("user_id", "role_name"),
+    CONSTRAINT "users_roles_role_name_fkey" FOREIGN KEY (role_name) REFERENCES roles(name) ON DELETE CASCADE NOT DEFERRABLE,
+    CONSTRAINT "users_roles_user_id_fkey" FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE NOT DEFERRABLE
+) WITH (oids = false);
+
+/*  optional: plugins/config */
+CREATE TABLE "public"."config" (
+    "id" uuid DEFAULT gen_random_uuid() NOT NULL,
+    "key" text NOT NULL,
+    "value" text,
+    CONSTRAINT "config_key_key" UNIQUE ("key"),
+    CONSTRAINT "config_pkey" PRIMARY KEY ("id")
+) WITH (oids = false);
 ```
 
 ### add authorization actions using Hasura console

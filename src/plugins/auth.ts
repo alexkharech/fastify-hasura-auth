@@ -6,45 +6,40 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { ServerResponse } from "http";
 import { User } from "../models";
 import { SignOptions } from "jsonwebtoken";
-
 import errors from "../errors";
 import { checkForExists } from "../utils";
+import { IUserToken } from "../interfaces";
 
-interface Options {
+interface IAuthOptions {
   [key: string]: any;
   claimsNamespace: string;
   privateKey: string;
   publicKey: string;
+  usernameField: string;
+  usernameTransformer?: (username: string) => string;
 }
 
-const loginField = "email";
-
-type UserToken = {
-  id: string;
-  active: boolean;
-  roles: string[];
-  token?: string;
-  [loginField]: string;
-};
-
-export default fp((fastify, opts: Options, next) => {
+export default fp((fastify, options: IAuthOptions, next) => {
   checkForExists(
-    opts,
+    options,
     ["claimsNamespace", "privateKey", "publicKey"],
     (key) => {
       throw new Error(`Auth option ${key} must be defined`);
     }
   );
 
+  const { usernameField } = options;
+  type usernamePassword = { [usernameField: string]: string; password: string };
+
   fastify.register(auth);
   fastify.register(jwt, {
     secret: {
-      private: opts.privateKey,
-      public: opts.publicKey,
+      private: options.privateKey,
+      public: options.publicKey,
     },
   });
 
-  const getJwt = (user: UserToken) => {
+  const getJwt = (user: IUserToken) => {
     const signOptions: SignOptions = {
       subject: user.id,
       expiresIn: "30d", // 30 days validity
@@ -54,7 +49,7 @@ export default fp((fastify, opts: Options, next) => {
     const claim = {
       ...user,
       iat: Math.floor(Date.now() / 1000),
-      [opts.claimsNamespace]: {
+      [options.claimsNamespace]: {
         "x-hasura-allowed-roles": user.roles,
         "x-hasura-default-role": "user",
         "x-hasura-user-id": user.id,
@@ -65,10 +60,10 @@ export default fp((fastify, opts: Options, next) => {
     return fastify.jwt.sign(claim, signOptions);
   };
 
-  const createUserToken = async (user: User): Promise<UserToken> => {
-    const userToken: UserToken = {
+  const createUserToken = async (user: User): Promise<IUserToken> => {
+    const userToken: IUserToken = {
       id: user.id,
-      [loginField]: user[loginField],
+      [usernameField]: user[usernameField],
       active: user.active,
       roles: user.getRoles(),
     };
@@ -77,9 +72,9 @@ export default fp((fastify, opts: Options, next) => {
     const redisKey = `tokens:${user.id}:${userToken.token}`;
     const error = await fastify.redis.set(
       redisKey,
-      userToken.id,
+      "",
       "EX",
-      opts.tokenExpire
+      options.tokenExpire
     );
     if (error) fastify.log.error(error);
 
@@ -87,19 +82,23 @@ export default fp((fastify, opts: Options, next) => {
   };
 
   fastify.decorate(
-    "verifyLoginAndPassword",
+    "verifyUsernameAndPassword",
     async (
       request: FastifyRequest,
       reply: FastifyReply<ServerResponse>,
       done: Function
     ) => {
       const {
-        [loginField]: login,
+        [usernameField]: username,
         password,
-      }: { [loginField]: string; password: string } = request.body.input;
+      }: usernamePassword = request.body.input;
+
+      const transformedUsername = options.usernameTransformer
+        ? options.usernameTransformer(username)
+        : username;
 
       const user = await User.query()
-        .where({ [loginField]: login.toLowerCase() })
+        .where({ [usernameField]: transformedUsername })
         .first()
         .eager("roles");
 
@@ -121,14 +120,16 @@ export default fp((fastify, opts: Options, next) => {
       done: Function
     ) => {
       const {
-        [loginField]: login,
+        [usernameField]: username,
         password,
-      }: { [loginField]: string; password: string } = request.body.input;
+      }: usernamePassword = request.body.input;
 
-      const lowerLogin = login.toLowerCase();
+      const transformedUsername = options.usernameTransformer
+        ? options.usernameTransformer(username)
+        : username;
 
       let user = await User.query()
-        .where({ [loginField]: lowerLogin })
+        .where({ [usernameField]: transformedUsername })
         .first();
 
       if (user) {
@@ -139,11 +140,14 @@ export default fp((fastify, opts: Options, next) => {
       try {
         user = await User.query()
           .insertGraphAndFetch({
-            [loginField]: lowerLogin,
+            [usernameField]: transformedUsername,
             password: password,
             roles: [{ "#dbRef": "user" }],
           })
           .withGraphFetched("roles");
+
+        if (request.body.input.photographer)
+          await user.$relatedQuery("photographer").insert({});
 
         request.user = await createUserToken(user);
         done(null);
@@ -167,7 +171,7 @@ export default fp((fastify, opts: Options, next) => {
       const token = (authorization as string).split(" ")[1];
       if (!token) return done(new Error(errors.INVALID_TOKEN));
 
-      const userToken = fastify.jwt.decode(token) as UserToken;
+      const userToken = fastify.jwt.decode(token) as IUserToken;
       if (userToken) {
         // token expired or not found
         if (!(await fastify.redis.get(`tokens:${userToken.id}:${token}`)))

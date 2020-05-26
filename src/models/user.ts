@@ -3,6 +3,9 @@ import bcrypt from "bcryptjs";
 import Role from "./role";
 
 export default class User extends Model {
+  // ts index fix
+  [_index: string]: any;
+
   id!: string;
   email!: string;
   password!: string;
