@@ -103,6 +103,21 @@ type Mutation {
 type Query {
   token: authOutput
 }
+
+# password recover
+type Mutation {
+  password_recovery(email: String!): statusOutput
+}
+
+# password reset
+type Mutation {
+  password_reset(token: String!): statusOutput
+}
+
+# status
+type statusOutput {
+  status: Boolean!
+}
 ```
 
 ### set permisions
