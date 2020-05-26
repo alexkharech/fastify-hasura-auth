@@ -8,10 +8,10 @@ import { bootstrap } from "fastify-decorators";
 import { RedisOptions } from "ioredis";
 
 import "./utils";
-import { openapi, auth, objection } from "./plugins";
+import { openapi, auth, objection, nodemailer } from "./plugins";
 import { resolve } from "path";
 
-import { checkForExists } from "utils";
+import { checkForExists } from "./utils";
 
 checkForExists(
   process.env,
@@ -47,6 +47,16 @@ if (process.env.NODE_ENV !== "production")
 
 instance
   .register(helmet)
+  .register(nodemailer, {
+    pool: true,
+    host: process.env.MAIl_HOST,
+    port: process.env.MAIL_PORT,
+    secure: process.env.MAIL_USE_TLS,
+    auth: {
+      user: process.env.MAIL_USERNAME,
+      pass: process.env.MAIL_PASSWORD,
+    },
+  })
   .register(objection, {
     url: process.env.DATABASE_URL,
   })
