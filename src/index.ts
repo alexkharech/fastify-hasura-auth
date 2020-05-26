@@ -11,15 +11,21 @@ import "./utils";
 import { openapi, auth, objection } from "./plugins";
 import { resolve } from "path";
 
-[
-  "REDIS_URL",
-  "DATABASE_URL",
-  "CLAIMS_NAMESPACE",
-  "AUTH_PRIVATE_KEY",
-  "AUTH_PUBLIC_KEY",
-].ifNotFound(process.env, (name) => {
-  throw new Error(`Environment variable ${name} must be defined`);
-});
+import { checkForExists } from "utils";
+
+checkForExists(
+  process.env,
+  [
+    "REDIS_URL",
+    "DATABASE_URL",
+    "CLAIMS_NAMESPACE",
+    "AUTH_PRIVATE_KEY",
+    "AUTH_PUBLIC_KEY",
+  ],
+  (key) => {
+    throw new Error(`Environment variable ${key} must be defined`);
+  }
+);
 
 const instance = fastify({
   logger: true,

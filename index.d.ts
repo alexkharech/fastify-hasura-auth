@@ -1,5 +1,5 @@
-import * as fastify from "fastify";
 import * as http from "http";
+import * as mailer from "nodemailer";
 import Knex from "knex";
 import { AuthFunction } from "fastify-auth";
 
@@ -14,19 +14,6 @@ declare module "fastify" {
     registerUser: AuthFunction;
     verifyJwtToken: AuthFunction;
     verifyLoginAndPassword: AuthFunction;
-  }
-}
-
-declare global {
-  interface String {
-    isValidEmail(): boolean;
-  }
-
-  interface Array<T> {
-    ifNotFound(
-      this: T[],
-      options: { [key: string]: any },
-      callback: (name: string) => void
-    ): void;
+    nodemailer: mailer.Transport;
   }
 }

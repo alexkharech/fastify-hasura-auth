@@ -6,7 +6,9 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { ServerResponse } from "http";
 import { User } from "../models";
 import { SignOptions } from "jsonwebtoken";
-import errorTexts from "../errors";
+
+import errors from "../errors";
+import { checkForExists } from "../utils";
 
 interface Options {
   [key: string]: any;
@@ -26,9 +28,13 @@ type UserToken = {
 };
 
 export default fp((fastify, opts: Options, next) => {
-  ["claimsNamespace", "privateKey", "publicKey"].ifNotFound(opts, (name) => {
-    throw new Error(`Auth option ${name} must be defined`);
-  });
+  checkForExists(
+    opts,
+    ["claimsNamespace", "privateKey", "publicKey"],
+    (key) => {
+      throw new Error(`Auth option ${key} must be defined`);
+    }
+  );
 
   fastify.register(auth);
   fastify.register(jwt, {
@@ -98,10 +104,9 @@ export default fp((fastify, opts: Options, next) => {
         .eager("roles");
 
       if (!user || !(await user.verifyPassword(password)))
-        return done(new Error(errorTexts.AUTH_USER_NOT_FOUND));
+        return done(new Error(errors.USER_NOT_FOUND));
 
-      if (!user.active)
-        return done(new Error(errorTexts.AUTH_USER_IS_NOT_ACTIVE));
+      if (!user.active) return done(new Error(errors.USER_IS_NOT_ACTIVE));
 
       request.user = await createUserToken(user);
       done(null);
@@ -128,7 +133,7 @@ export default fp((fastify, opts: Options, next) => {
 
       if (user) {
         reply.status(409);
-        return done(new Error(errorTexts.AUTH_EMAIL_IS_ALREADY_IN_USE));
+        return done(new Error(errors.EMAIL_IS_ALREADY_IN_USE));
       }
 
       try {
@@ -157,16 +162,16 @@ export default fp((fastify, opts: Options, next) => {
       done: Function
     ) => {
       const { authorization } = request.headers;
-      if (!authorization) return done(new Error(errorTexts.AUTH_INVALID_TOKEN));
+      if (!authorization) return done(new Error(errors.INVALID_TOKEN));
 
       const token = (authorization as string).split(" ")[1];
-      if (!token) return done(new Error(errorTexts.AUTH_INVALID_TOKEN));
+      if (!token) return done(new Error(errors.INVALID_TOKEN));
 
       const userToken = fastify.jwt.decode(token) as UserToken;
       if (userToken) {
         // token expired or not found
         if (!(await fastify.redis.get(`tokens:${userToken.id}:${token}`)))
-          return done(new Error(errorTexts.AUTH_INVALID_TOKEN));
+          return done(new Error(errors.INVALID_TOKEN));
 
         // update token
         const user = await User.query()
@@ -175,7 +180,7 @@ export default fp((fastify, opts: Options, next) => {
 
         request.user = await createUserToken(user);
       } else {
-        return done(new Error(errorTexts.AUTH_INVALID_TOKEN));
+        return done(new Error(errors.INVALID_TOKEN));
       }
 
       done(null);
