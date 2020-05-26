@@ -146,9 +146,6 @@ export default fp((fastify, options: IAuthOptions, next) => {
           })
           .withGraphFetched("roles");
 
-        if (request.body.input.photographer)
-          await user.$relatedQuery("photographer").insert({});
-
         request.user = await createUserToken(user);
         done(null);
       } catch (err) {

@@ -94,7 +94,6 @@ export default class AuthController {
               properties: {
                 email: { type: "string" },
                 password: { type: "string", minLength: 6, maxLength: 255 },
-                photographer: { type: "boolean", default: false },
               },
               required: ["email", "password"],
             },
