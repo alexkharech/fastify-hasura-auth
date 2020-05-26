@@ -55,8 +55,7 @@ CREATE TABLE "public"."users" (
     "active" boolean DEFAULT true NOT NULL,
     "password" text NOT NULL,
     CONSTRAINT "user_email_key" UNIQUE ("email"),
-    CONSTRAINT "user_pkey" PRIMARY KEY ("id"),
-    CONSTRAINT "users_phone_key" UNIQUE ("phone")
+    CONSTRAINT "user_pkey" PRIMARY KEY ("id")
 ) WITH (oids = false);
 
 CREATE TABLE "public"."users_roles" (
