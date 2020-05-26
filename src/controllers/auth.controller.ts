@@ -7,7 +7,9 @@ import {
   getInstanceByToken,
 } from "fastify-decorators";
 import { ServerResponse } from "http";
+
 import errors from "../errors";
+import { generateToken, validateEmail } from "../utils";
 
 @Controller({ route: "/auth" })
 export default class AuthController {
@@ -41,9 +43,9 @@ export default class AuthController {
       },
       preValidation(request, reply, next) {
         const { email }: { email: string } = request.body.input;
-        if (!email.isValidEmail()) {
+        if (!validateEmail(email)) {
           reply.status(422).send({
-            message: errors.AUTH_INVALID_EMAIL_ADDRESS,
+            message: errors.INVALID_EMAIL_ADDRESS,
           });
         }
         next();
@@ -86,9 +88,9 @@ export default class AuthController {
       },
       preValidation(request, reply, next) {
         const { email }: { email: string } = request.body.input;
-        if (!email.isValidEmail()) {
+        if (!validateEmail(email)) {
           reply.status(422).send({
-            message: errors.AUTH_INVALID_EMAIL_ADDRESS,
+            message: errors.INVALID_EMAIL_ADDRESS,
           });
         }
         next();
