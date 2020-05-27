@@ -44,5 +44,13 @@ export default fp((fastify, opts, next) => {
     },
   });
 
+  fastify.addSchema({
+    $id: "Status",
+    type: "object",
+    properties: {
+      status: { type: "boolean" },
+    },
+  });
+
   next();
 });

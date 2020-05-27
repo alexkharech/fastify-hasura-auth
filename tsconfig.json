@@ -9,7 +9,7 @@
     "emitDecoratorMetadata": true,
     "baseUrl": "./src",
     "outDir": "./dist",
-    "sourceMap": true
+    "sourceMap": false
   },
   "exclude": [
     "node_modules",

@@ -32,8 +32,8 @@ const instance = fastify({
 });
 
 instance.register(blipp);
-if (process.env.NODE_ENV !== "production")
-  instance.register(openapi, {
+instance
+  .register(openapi, {
     info: {
       title: "fastify-hasura-auth",
       version: "1.0.0",
@@ -43,9 +43,7 @@ if (process.env.NODE_ENV !== "production")
         url: process.env.OPENAPI_SERVER || "https://api.example.com",
       },
     ],
-  });
-
-instance
+  })
   .register(helmet)
   .register(nodemailer, {
     pool: true,
