@@ -24,7 +24,7 @@ export default fp((fastify, options: IAuthOptions, next) => {
     options,
     ["claimsNamespace", "privateKey", "publicKey"],
     (key) => {
-      throw new Error(`Auth option ${key} must be defined`);
+      next(new Error(`Auth option ${key} must be defined`));
     }
   );
 
