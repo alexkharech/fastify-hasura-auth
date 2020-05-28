@@ -22,6 +22,20 @@ AUTH_PUBLIC_KEY="-----BEGIN PUBLIC KEY-----\nV02/4RJi........"
 HASURA_GRAPHQL_JWT_SECRET={ "claims_namespace": "https://hasura.io/jwt/claims", "type": "RS256", "key": "<AUTH_PUBLIC_KEY>" }
 ```
 
+read keys from files in docker use
+
+```js
+const keys = {
+  key: process.env.AUTH_PRIVATE_KEY || "",
+  cert: process.env.AUTH_PUBLIC_KEY || "",
+};
+
+if (process.env.NODE_ENV === "production") {
+  keys.key = fs.readFileSync(resolve(__dirname, "/keys/key.pem"), "utf8");
+  keys.cert = fs.readFileSync("/keys/server.crt", "utf8");
+}
+```
+
 ## develop
 
 ### hasura engine
