@@ -18,7 +18,7 @@
     "bcryptjs": "^2.4.3",
     "cross-env": "^7.0.2",
     "dotenv": "^8.2.0",
-    "fastify": "^2.13.1",
+    "fastify": "^2.15.1",
     "fastify-auth": "^0.7.2",
     "fastify-blipp": "^2.3.0",
     "fastify-decorators": "^2.0.0-7",
